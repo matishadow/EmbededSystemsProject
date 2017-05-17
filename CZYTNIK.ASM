@@ -51,7 +51,7 @@ LOOP:
 CLEAR:
 	MOV	@R1,A
 	INC	R1
-	CJNE	R1,#DATA+40,CLEAR	; adres końca danych
+	CJNE	R1,#DATA+40,CLEAR	; adres końca danych (30H)
 
 WAIT_CARD:			; oczekiwanie na włożenie karty
 	MOVX	A,@R0		; tj. na sygnał CARD PRESENT
@@ -128,25 +128,13 @@ END_READ:
 	JZ	WRITE_END	; nie odczytano żadnych znaków
 
 	MOV	R1,#DATA	; adres na pierwszą daną
-	; MOV	B,#DATA+1	; adres na pierwszą daną
 	
-	; ; sprawdzam, czy na poczatku srednik
+	; sprawdzam, czy na poczatku srednik
 	MOV	A,@R1		; odczyt danej z pamięci
-	; ANL	A,#0FH		; zerowanie bitu parzystości
-	; ADD	A,#30H		; wypisanie na wyświetlaczu LCD
-	
-	; LCALL	WRITE_HEX
-	; LCALL	WRITE_DATA
-	MOV B,A
-	MOV A, #0Bh
-	; LCALL	WRITE_HEX
-	XRL A,B
-	; MOV A,B
-	; LCALL	WRITE_HEX
-	; LCALL	WRITE_DATA
-	JZ WRITE
-	; CJNE A,'; ',P_WRITE2
-	
+	MOV B,A         ; zapamiętanie wartości A aby potem porównać ze średnikiem
+	MOV A, #0Bh     ; do A wkładamy średnik
+	XRL A,B         ; sprawdzamy czy znak zapisany w B to średnik
+	JZ WRITE        ; jeśli tak to skaczemy do normalnego wypisywania
 	
 P_WRITE2:
 	CPL LED
