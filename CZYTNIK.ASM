@@ -143,34 +143,27 @@ P_WRITE2:
 	
 ;**************************************
 WRITE:	
-	
 	MOV	A,@R1		; odczyt danej z pamięci
-	MOV B,A		; !!!zapamietuje parity z danych
-	; MOV LED,C
+	MOV B,A		    ; !!!zapamietuje parity z danych
 	
-	ANL	A,#0FH; kas acc4		; zerowanie bitu parzystości???
-	; ; MOV C,PSW.0
+	ANL	A,#0FH      ; zerowanie bitu parzystości???
 	JB PSW.0,PARA0
 	JNB PSW.0,PARA1
 PARA1:
-	; 	; CPL LED
 	JB B.4,PAR_OK
-	JNB B.4,WRITE_BLAD1
+	JNB B.4,WRITE_ERR_CHR
 PARA0:
-	; ; CPL LED
 	JNB B.4,PAR_OK
-	JB B.4,WRITE_BLAD1
+	JB B.4,WRITE_ERR_CHR
 PAR_OK:
-	; ; CPL LED
 	
 ;**************************************
 ; zapis danych na wyświetlacz
 
-	; XOR B,B
 	MOV	A,@R1		; odczyt danej z pamięci
 	ANL	A,#0FH		; zerowanie bitu parzystości
-	ADD	A,#30H		; wypisanie na wyświetlaczu LCD
-	LCALL	WRITE_DATA
+	ADD	A,#30H		; dodanie 48 aby zgadzało się z ascii	
+	LCALL	WRITE_DATA ; wypisanie na wyświetlaczu LCD
 
 	MOV	A,@R1
 	ANL	A,#0FH
@@ -185,7 +178,6 @@ WRITE_END:			; oczekiwanie na koniec sygnału -CARD PRESENT
 	MOVX	A,@R0
 	JNB	ACC.0,WRITE_END
 	LJMP	LOOP		; oczekiwanie na następną kartę
-	; nie wjedzie
 ;**************************************
 WRITE2:	
 	; CPL LED
@@ -212,10 +204,10 @@ WRITE2:
 	JNB PSW.0,PARA12
 PARA12:
 	JB B.4,PAR_OK
-	JNB B.4,WRITE_BLAD1
+	JNB B.4,WRITE_ERR_CHR
 PARA02:
 	JNB B.4,PAR_OK2
-	JB B.4,WRITE_BLAD1
+	JB B.4,WRITE_ERR_CHR
 PAR_OK2:
 	
 ;**************************************
@@ -239,9 +231,9 @@ NO_END2:
 	;**************************************
 ; koniec danych
 
-WRITE_BLAD1:
+WRITE_ERR_CHR:
 	; CPL LED
-	MOV	DPTR,#TEXT2
+	MOV	DPTR,#ERR_CHR
 	LCALL	WRITE_TEXT	
 	LJMP LOOP
 	
@@ -252,10 +244,9 @@ WRITE_TEST1:
 ;**************************************
 TEXT1:
 	DB	'WAIT FOR CARD  ',0
-TEXT2:
+ERR_CHR:
 	DB 	'BLAD PARZYSTOSCI ZNAKU',0
-; TEXT2:
-; 	DB 	'X',0
+
 TEST1:
 	DB	'test', 0
 ;**************************************
