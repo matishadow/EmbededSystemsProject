@@ -183,8 +183,6 @@ WRITE2:
 	; CPL LED
 	MOV	A,@R1		; odczyt danej z pamięci
 	
-	; MOV B,A		; !!!zapamietuje parity z danych
-	; MOV LED,C
 	MOV C, ACC.7
 	MOV B.0,C
 	MOV C, ACC.6
@@ -197,15 +195,14 @@ WRITE2:
 	MOV B.4,C
 	MOV A,B
 	
-	ANL	A,#0FH; kas acc4		; zerowanie bitu parzystości???
-	; ; MOV C,PSW.0
+	ANL	A,#0FH      ; zerowanie bitu parzystości???
 	
-	JB PSW.0,PARA02
-	JNB PSW.0,PARA12
-PARA12:
-	JB B.4,PAR_OK
+	JB PSW.0,PARA0_2
+	JNB PSW.0,PARA1_2
+PARA1_2:
+	JB B.4,PAR_OK2
 	JNB B.4,WRITE_ERR_CHR
-PARA02:
+PARA0_2:
 	JNB B.4,PAR_OK2
 	JB B.4,WRITE_ERR_CHR
 PAR_OK2:
