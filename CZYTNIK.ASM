@@ -177,6 +177,12 @@ NO_END:
 WRITE_END:			; oczekiwanie na koniec sygnału -CARD PRESENT
 	MOVX	A,@R0
 	JNB	ACC.0,WRITE_END
+
+	LCALL CHECK_SUM
+	MOV R1, #DATA+40  ; !!! TU też do sprawdzenia czy ta suma z karty jest tam
+	MOV B , @R1
+	CJNE A, B, WRITE_ERR_SUM
+
 	LJMP	LOOP		; oczekiwanie na następną kartę
 ;**************************************
 WRITE2:	
@@ -225,13 +231,37 @@ NO_END2:
 	DJNZ	R3,WRITE2
 
 
-	;**************************************
+	LJMP AFTER_CHECK
+; Podprocedura do liczenia xora z danych od DATA do ;
+; podprocedura psuje rejestry A i B
+CHECK_SUM:
+	MOV B, #0        ; zerujemy B bo tam będziemy trzymac wynik xora
+	MOV R1, #DATA
+CHECK_LOOP:
+	MOV A, @R1       ; znaki po kolei idą do A
+   ;ANL	A,#0FH       ; !!! TU nie jestem pewien czy suma znajdująca się na karcie jest liczona z bitem parzystości czy nie
+	XRL B, A         ; xorujemy je
+	MOV A, @R1       ; znowu znak do A żeby potem sprawdzić czy jest on średnikiem
+	INC R1           ; przesuwamy wskaźnik na następny znak
+	CJNE	A,#0FH,CHECK_LOOP    ; Sprawdzamy czy znak jest średnikiem
+	                 ; średnik też xorujemy
+	MOV A, B        ; wynik zwracamy w A
+	RET
+AFTER_CHECK:
+
+
+;**************************************
 ; koniec danych
 
 WRITE_ERR_CHR:
 	; CPL LED
 	MOV	DPTR,#ERR_CHR
 	LCALL	WRITE_TEXT	
+	LJMP LOOP
+WRITE_ERR_SUM:
+	LCALL LCD_CLR
+	MOV DPTR,#ERR_SUM
+	LCALL 	WRITE_TEXT
 	LJMP LOOP
 	
 WRITE_TEST1:
@@ -243,6 +273,8 @@ TEXT1:
 	DB	'WAIT FOR CARD  ',0
 ERR_CHR:
 	DB 	'BLAD PARZYSTOSCI ZNAKU',0
+ERR_SUM:
+	DB	'BLAD SUMY KONTROLNEJ',0
 
 TEST1:
 	DB	'test', 0
